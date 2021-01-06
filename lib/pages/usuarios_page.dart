@@ -1,5 +1,7 @@
 import 'package:chatapp/models/usuario.dart';
+import 'package:chatapp/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class UsuariosPage extends StatefulWidget {
@@ -8,7 +10,7 @@ class UsuariosPage extends StatefulWidget {
 }
 
 class _UsuariosPageState extends State<UsuariosPage> {
-   RefreshController _refreshController =
+  RefreshController _refreshController =
       RefreshController(initialRefresh: false);
 
   final usuarios = [
@@ -18,6 +20,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
   ];
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Scaffold(
         appBar: AppBar(
           actions: <Widget>[
@@ -31,7 +34,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
             )
           ],
           title: Text(
-            'Mi nombre',
+            authService.usuario.nombre,
             style: TextStyle(color: Colors.black54),
           ),
           elevation: 1,
@@ -41,59 +44,53 @@ class _UsuariosPageState extends State<UsuariosPage> {
                 Icons.exit_to_app,
                 color: Colors.blue,
               ),
-              onPressed: () {}),
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, 'login');
+                AuthService.deleteToken();
+              }),
         ),
-        body:SmartRefresher(
+        body: SmartRefresher(
           controller: _refreshController,
-          child:  _listViewUsuarios(),
+          child: _listViewUsuarios(),
           enablePullDown: true,
           header: WaterDropHeader(
-            complete: Icon(Icons.check,color:Colors.blue[400]),
+            complete: Icon(Icons.check, color: Colors.blue[400]),
             waterDropColor: Colors.blue[400],
           ),
           onRefresh: _cargarUsuarios,
-
-        )
-        
-        
-        );
+        ));
   }
 
   ListView _listViewUsuarios() {
     return ListView.separated(
         physics: BouncingScrollPhysics(),
-          itemBuilder: (_,i)=>_usuarioListTile(usuarios[i]),
-           separatorBuilder: (_,i)=>Divider(),
-            itemCount: usuarios.length);
+        itemBuilder: (_, i) => _usuarioListTile(usuarios[i]),
+        separatorBuilder: (_, i) => Divider(),
+        itemCount: usuarios.length);
   }
 
   ListTile _usuarioListTile(Usuario usuario) {
     return ListTile(
-              title: Text(usuario.nombre),
-              subtitle: Text(usuario.email),
-              leading: CircleAvatar(
-                child:Text( usuario.nombre.substring(0,2)),
-                backgroundColor: Colors.blue[200],
-
-              ),
-              trailing: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color:usuario.online ? Colors.green[300]:Colors.red[300],
-                  borderRadius: BorderRadius.circular(150)
-                ),
-              ),
-          );
+      title: Text(usuario.nombre),
+      subtitle: Text(usuario.email),
+      leading: CircleAvatar(
+        child: Text(usuario.nombre.substring(0, 2)),
+        backgroundColor: Colors.blue[200],
+      ),
+      trailing: Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+            color: usuario.online ? Colors.green[300] : Colors.red[300],
+            borderRadius: BorderRadius.circular(150)),
+      ),
+    );
   }
 
-  _cargarUsuarios()async{
-    
+  _cargarUsuarios() async {
     // monitor network fetch
     await Future.delayed(Duration(milliseconds: 1000));
     // if failed,use refreshFailed()
     _refreshController.refreshCompleted();
-  
-
   }
 }

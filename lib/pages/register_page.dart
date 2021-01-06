@@ -1,9 +1,12 @@
+import 'package:chatapp/helpers/mostrar_alerta.dart';
+import 'package:chatapp/services/auth_service.dart';
 import 'package:chatapp/widgets/btn_azul.dart';
 import 'package:chatapp/widgets/custom_input.dart';
 import 'package:chatapp/widgets/labels.dart';
 import 'package:chatapp/widgets/logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatelessWidget {
   @override
@@ -22,7 +25,11 @@ class RegisterPage extends StatelessWidget {
                     titulo: 'Registro',
                   ),
                   _Form(),
-                  Labels(ruta: 'login',titulo: 'Tienes una cuenta?',subTitulo: 'Ingresa ahora!', ),
+                  Labels(
+                    ruta: 'login',
+                    titulo: 'Tienes una cuenta?',
+                    subTitulo: 'Ingresa ahora!',
+                  ),
                   Text(
                     'Términos  y condiciones de uso',
                     style: TextStyle(fontWeight: FontWeight.w200),
@@ -46,6 +53,7 @@ class __FormState extends State<_Form> {
   final nombreCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -72,10 +80,18 @@ class __FormState extends State<_Form> {
           ),
           BotonAzul(
               text: 'Crear cuenta',
-              onPressed: () {
-                print(emailCtrl.text);
-                print(passCtrl.text);
-              })
+              onPressed: authService.autenticando
+                  ? null
+                  : () async {
+                      final registerOk = await authService.register(
+                          nombreCtrl.text.trim(), emailCtrl.text.trim(), passCtrl.text.trim());
+                      if (registerOk==true) {
+                        Navigator.pushReplacementNamed(context, 'usuarios');
+                      } else {
+                        mostrarAlerta(
+                            context, 'Registro Incorrecto', registerOk);
+                      }
+                    })
         ],
       ),
     );

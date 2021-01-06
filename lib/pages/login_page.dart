@@ -1,9 +1,12 @@
+import 'package:chatapp/helpers/mostrar_alerta.dart';
+import 'package:chatapp/services/auth_service.dart';
 import 'package:chatapp/widgets/btn_azul.dart';
 import 'package:chatapp/widgets/custom_input.dart';
 import 'package:chatapp/widgets/labels.dart';
 import 'package:chatapp/widgets/logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatelessWidget {
   @override
@@ -13,22 +16,27 @@ class LoginPage extends StatelessWidget {
         body: SafeArea(
           child: SingleChildScrollView(
             physics: BouncingScrollPhysics(),
-                      child: Container(
-                        height: MediaQuery.of(context).size.height*0.9,
-                        child: Column(
-
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Logo(titulo: 'Messenger',),
-                _Form(),
-                Labels(ruta: 'register',titulo: 'No tienes cuenta?',subTitulo: 'Crear una cuenta',),
-                Text(
-                  'Términos  y condiciones de uso',
-                  style: TextStyle(fontWeight: FontWeight.w200),
-                )
-              ],
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.9,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Logo(
+                    titulo: 'Messenger',
+                  ),
+                  _Form(),
+                  Labels(
+                    ruta: 'register',
+                    titulo: 'No tienes cuenta?',
+                    subTitulo: 'Crear una cuenta',
+                  ),
+                  Text(
+                    'Términos  y condiciones de uso',
+                    style: TextStyle(fontWeight: FontWeight.w200),
+                  )
+                ],
+              ),
             ),
-                      ),
           ),
         ));
   }
@@ -44,6 +52,7 @@ class __FormState extends State<_Form> {
   final passCtrl = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -64,10 +73,19 @@ class __FormState extends State<_Form> {
           ),
           BotonAzul(
               text: 'Ingresar',
-              onPressed: () {
-                print(emailCtrl.text);
-                print(passCtrl.text);
-              })
+              onPressed: authService.autenticando
+                  ? null
+                  : () async {
+                      FocusScope.of(context).unfocus();
+                      final loginOk = await authService.login(
+                          emailCtrl.text.trim(), passCtrl.text.trim());
+                      if (loginOk) {
+                        Navigator.pushReplacementNamed(context, 'usuarios');
+                      } else {
+                        mostrarAlerta(context, 'Login incorrecto',
+                            'revise sus credenciales');
+                      }
+                    })
         ],
       ),
     );
